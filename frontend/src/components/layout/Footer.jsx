@@ -139,7 +139,7 @@ export const Footer = () => {
 								info@instamakaan.com
 							</li>
 							<li className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
-								<MapPin className="w-4 h-4 mt-0.5" />
+								<MapPin className="w-7 h-5 mt-0.5" />
 								<span>
 									Tower T2, Flat B809, Tech Zone 4, Plot 17, Amrapali Dream
 									Valley,

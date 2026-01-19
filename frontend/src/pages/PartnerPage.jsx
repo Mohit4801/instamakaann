@@ -1,235 +1,198 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle2,
-  CreditCard,
-  Users,
-  TrendingUp,
-  Smartphone,
-  Shield,
-  Clock,
-  FileText,
-  UserCheck,
-  Search,
-  Wallet,
-  Home,
-  ArrowRight
+	ChevronLeft,
+	ChevronRight,
+	CheckCircle2,
+	ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
+/* ================= HERO SLIDES ================= */
 const heroSlides = [
-  {
-    headline: 'End the Renting Headaches. Discover True Rental Sukoon.',
-    description: 'Transform your property management experience with InstaMakaan.',
-  },
-  {
-    headline: 'Predictable Income, Guaranteed Peace of Mind.',
-    description: 'Never worry about missed rent payments or difficult tenants again.',
-  },
-  {
-    headline: 'We Handle It All, You Enjoy the Returns.',
-    description: 'From tenant screening to maintenance, we manage everything.',
-  },
-  {
-    headline: 'Unlock Your Property\'s Full Potential.',
-    description: 'Maximize your rental income with professional management.',
-  },
+	{
+		headline: 'End the Renting Headaches. Discover True Rental Sukoon.',
+		description:
+			'Transform your property management experience with InstaMakaan.',
+		image: '/images/owner-1.jpg',
+	},
+	{
+		headline: 'Predictable Income, Guaranteed Peace of Mind.',
+		description:
+			'Never worry about missed rent payments or difficult tenants again.',
+		image: '/images/owner-2.jpg',
+	},
+	{
+		headline: 'We Handle It All, You Enjoy the Returns.',
+		description: 'From tenant screening to maintenance, we manage everything.',
+		image: '/images/owner-3.jpg',
+	},
+	{
+		headline: "Unlock Your Property's Full Potential.",
+		description: 'Maximize your rental income with professional management.',
+		image: '/images/owner-4.jpg',
+	},
 ];
 
+/* ================= SERVICES ================= */
 const services = [
-  {
-    id: 'payment',
-    headline: 'Never Chase Rent Again.',
-    icon: CreditCard,
-    features: [
-      { icon: Clock, text: 'Automated Reminders: Timely alerts to tenants.' },
-      { icon: UserCheck, text: 'Proactive Follow-ups: We ensure prompt deposits.' },
-      { icon: Wallet, text: 'Guaranteed Payouts: Your income, always on time.' },
-      { icon: FileText, text: 'Transparent Statements: Clear financial reporting.' },
-    ],
-    cta: 'Learn More About Rent Collection',
-    visual: 'payment',
-  },
-  {
-    id: 'tenant',
-    headline: 'The Right Tenant, Every Time.',
-    icon: Users,
-    features: [
-      { icon: Shield, text: 'Rigorous KYC & Checks: Trustworthy, reliable tenants.' },
-      { icon: UserCheck, text: 'Behavioral Screening: Matching the right fit.' },
-      { icon: Clock, text: 'Fast Placement: Minimize vacancy periods.' },
-      { icon: Search, text: 'Wide Network Reach: Access to quality renters.' },
-    ],
-    cta: 'Contact Us for Tenant Screening',
-    visual: 'tenant',
-  },
-  {
-    id: 'income',
-    headline: 'Maximize Your Earning Potential.',
-    icon: TrendingUp,
-    features: [
-      { icon: Home, text: 'Full Occupancy Promise: Maximize rental days.' },
-      { icon: TrendingUp, text: 'Optimized Rental Yields: Best market pricing.' },
-      { icon: Shield, text: 'Proactive Maintenance: Protect your asset value.' },
-      { icon: FileText, text: 'Full Transparency: Clear reports, total control.' },
-    ],
-    cta: 'Get Your Personalized Plan',
-    visual: 'income',
-  },
+	{
+		id: 'payment',
+		headline: 'Never Chase Rent Again.',
+		video: '/videos/rent.mp4',
+		features: [
+			'Automated reminders & follow-ups.',
+			'Guaranteed monthly payouts.',
+			'No rent delays.',
+			'Transparent statements.',
+		],
+		cta: 'Learn More About Rent Collection',
+	},
+	{
+		id: 'tenant',
+		headline: 'The Right Tenant, Every Time.',
+		video: '/videos/tenant.mp4',
+		features: [
+			'Rigorous KYC & background checks.',
+			'Behavioral screening.',
+			'Fast tenant placement.',
+			'Wide verified network.',
+		],
+		cta: 'Contact Us for Tenant Screening',
+	},
+	{
+		id: 'income',
+		headline: 'Maximize Your Earning Potential.',
+		video: '/videos/income.mp4',
+		features: [
+			'Full occupancy promise.',
+			'Optimized rental pricing.',
+			'Asset protection.',
+			'100% transparency.',
+		],
+		cta: 'Get Your Personalized Plan',
+	},
 ];
 
 const PartnerPage = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+	const [currentSlide, setCurrentSlide] = useState(0);
+	const intervalRef = useRef(null);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+	/* ===== AUTOPLAY (NO HOVER PAUSE) ===== */
+	useEffect(() => {
+		intervalRef.current = setInterval(() => {
+			setCurrentSlide((p) => (p + 1) % heroSlides.length);
+		}, 4500);
+		return () => clearInterval(intervalRef.current);
+	}, []);
 
-  return (
-    <Layout>
-      {/* Breadcrumb */}
-      <div className="bg-secondary py-3">
-        <div className="container-custom">
-          <p className="text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Home</Link> / Partner with us
-          </p>
-        </div>
-      </div>
+	return (
+		<Layout>
+			{/* ================= HERO ================= */}
+			<section className="relative min-h-screen overflow-hidden -mt-14">
+				<div
+					className="absolute inset-0 bg-cover bg-center scale-105 transition-all duration-1000"
+					style={{ backgroundImage: `url(${heroSlides[currentSlide].image})` }}
+				/>
 
-      {/* Hero Section */}
-      <section className="py-12 md:py-20 section-light">
-        <div className="container-custom">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground text-center mb-8">
-            Are You a Property Owner?
-          </h1>
+				{/* SAME WHITE BLUR + DARK GRADIENT */}
+				<div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/60 to-white/80 dark:from-[#0b1220]/90 dark:via-[#0b1220]/85 dark:to-[#0b1220]/95 backdrop-blur-[0.5px]" />
 
-          <Card className="bg-card border-0 shadow-elevated overflow-hidden max-w-4xl mx-auto">
-            <CardContent className="p-0">
-              <div className="relative p-8 md:p-12 min-h-[300px] flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5">
-                {/* Carousel Content */}
-                <div className="text-center max-w-2xl animate-fade-in" key={currentSlide}>
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-4">
-                    {heroSlides[currentSlide].headline}
-                  </h2>
-                  <p className="text-muted-foreground">
-                    {heroSlides[currentSlide].description}
-                  </p>
-                </div>
+				<div className="relative z-10 min-h-screen flex items-center justify-center text-center px-6">
+					<div className="max-w-5xl">
+						<h1 className="text-4xl md:text-5xl font-bold mb-6">
+							Are You a Property Owner?
+						</h1>
+						<h2 className="text-2xl md:text-3xl text-teal-500 mb-4">
+							{heroSlides[currentSlide].headline}
+						</h2>
+						<p className="text-lg text-muted-foreground mb-8">
+							{heroSlides[currentSlide].description}
+						</p>
+						<Button variant="yellow" size="lg" asChild>
+							<Link to="/contact">Partner With Us</Link>
+						</Button>
+					</div>
+				</div>
 
-                {/* Navigation Arrows */}
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card shadow-card flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card shadow-card flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+				{/* ARROWS – TRANSPARENT, DESKTOP ONLY */}
+				<button
+					onClick={() =>
+						setCurrentSlide(
+							(p) => (p - 1 + heroSlides.length) % heroSlides.length,
+						)
+					}
+					className="hidden md:block absolute left-6 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition"
+				>
+					<ChevronLeft size={42} />
+				</button>
+				<button
+					onClick={() => setCurrentSlide((p) => (p + 1) % heroSlides.length)}
+					className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition"
+				>
+					<ChevronRight size={42} />
+				</button>
+			</section>
 
-              {/* Indicators */}
-              <div className="flex items-center justify-center gap-2 py-4 bg-card">
-                {heroSlides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={cn(
-                      'w-2 h-2 rounded-full transition-all',
-                      index === currentSlide ? 'w-8 bg-accent' : 'bg-muted-foreground/30'
-                    )}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+			{/* ================= SERVICES (VIDEO + CONTENT IN ONE BOX) ================= */}
+			{services.map((service, index) => (
+				<section
+					key={service.id}
+					className="py-14 md:py-20 bg-slate-50 dark:bg-[#0f172a]"
+				>
+					<div className="container-custom">
+						<Card className="rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-[#0b1220]">
+							<CardContent
+								className={cn(
+									'grid md:grid-cols-2 gap-8 items-center p-6 md:p-10',
+									index % 2 === 1 && 'md:[&>*:first-child]:order-2',
+								)}
+							>
+								{/* VIDEO BOX — SMALLER + 3:4 */}
+								<div className="flex justify-center">
+									<div className="relative w-[220px] sm:w-[250px] md:w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-lg">
+										<video
+											src={service.video}
+											autoPlay
+											muted
+											loop
+											playsInline
+											className="w-full h-full object-cover"
+										/>
+										<div className="absolute inset-0 bg-black/10" />
+									</div>
+								</div>
 
-      {/* Service Sections */}
-      {services.map((service, index) => (
-        <section
-          key={service.id}
-          className={cn('py-16 md:py-24', index % 2 === 0 ? 'section-white' : 'section-light')}
-        >
-          <div className="container-custom">
-            <Card className="bg-card border-0 shadow-card overflow-hidden">
-              <CardContent className="p-0">
-                <div className={cn(
-                  'grid md:grid-cols-2 gap-0',
-                  index % 2 === 1 && 'md:[&>*:first-child]:order-2'
-                )}>
-                  {/* Content */}
-                  <div className="p-6 md:p-10 flex flex-col justify-center">
-                    <h3 className="text-xl md:text-2xl font-bold text-foreground mb-6">
-                      {service.headline}
-                    </h3>
-                    <ul className="space-y-4 mb-8">
-                      {service.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <span className="text-muted-foreground">{feature.text}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button variant="teal" size="lg" className="w-fit" asChild>
-                      <Link to="/contact">
-                        {service.cta}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
-
-                  {/* Visual */}
-                  <div className="bg-gradient-to-br from-primary/5 to-accent/5 p-8 md:p-12 flex items-center justify-center min-h-[300px]">
-                    <div className="relative">
-                      <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-primary/10 flex items-center justify-center">
-                        <service.icon className="w-16 h-16 md:w-20 md:h-20 text-primary" />
-                      </div>
-                      <div className="absolute -top-4 -right-4 w-12 h-12 rounded-xl bg-accent/20" />
-                      <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-primary/20" />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      ))}
-
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-primary">
-        <div className="container-custom text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-            Ready to Experience Rental Sukoon?
-          </h2>
-          <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-            Join hundreds of property owners who trust InstaMakaan with their properties.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="yellow" size="lg" asChild>
-              <Link to="/contact">Get Started Today</Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary"
-            >
-              Schedule a Call
-            </Button>
-          </div>
-        </div>
-      </section>
-    </Layout>
-  );
+								{/* CONTENT */}
+								<div>
+									<h3 className="text-2xl font-bold mb-5">
+										{service.headline}
+									</h3>
+									<ul className="space-y-3 mb-6">
+										{service.features.map((f, i) => (
+											<li key={i} className="flex gap-3">
+												<CheckCircle2 className="text-teal-500 mt-1" />
+												<span>{f}</span>
+											</li>
+										))}
+									</ul>
+									<Button variant="teal" asChild>
+										<Link to="/contact">
+											{service.cta}
+											<ArrowRight className="ml-2 w-4 h-4" />
+										</Link>
+									</Button>
+								</div>
+							</CardContent>
+						</Card>
+					</div>
+				</section>
+			))}
+		</Layout>
+	);
 };
 
 export default PartnerPage;

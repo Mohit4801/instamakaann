@@ -9,8 +9,8 @@ import ProtectedRoute, {
 // Pages
 import HomePage from '@/pages/HomePage';
 import PartnerPage from '@/pages/PartnerPage';
-import PropertiesPage from '@/pages/PropertiesPage';
-import AllPropertiesPage from '@/pages/AllPropertiesPage'; // ✅ NEW
+// import PropertiesPage from '@/pages/PropertiesPage';
+import AllPropertiesPage from '@/pages/AllPropertiesPage'; 
 import PropertyDetailPage from '@/pages/PropertyDetailPage';
 import BlogPage from '@/pages/BlogPage';
 import AboutPage from '@/pages/AboutPage';
@@ -52,7 +52,7 @@ function App() {
 						{/* ================= PUBLIC ROUTES ================= */}
 						<Route path="/" element={<HomePage />} />
 						<Route path="/partner" element={<PartnerPage />} />
-						<Route path="/properties" element={<PropertiesPage />} />
+						{/* <Route path="/properties" element={<PropertiesPage />} /> */}
 						<Route
 							path="/all-properties"
 							element={<AllPropertiesPage />}
