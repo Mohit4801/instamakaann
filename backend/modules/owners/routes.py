@@ -10,12 +10,11 @@ from modules.owners.service import (
     delete_owner,
 )
 
+# ✅ KEEP EXISTING RBAC LOGIC — JUST EXPAND ROLE MATCH
 try:
-    # current working RBAC
     from core.security import require_role
 except ImportError:
     try:
-        # future RBAC 
         from core.rbac import require_role
     except ImportError:
         def require_role(roles):
@@ -33,7 +32,7 @@ router = APIRouter(
 @router.post("/", response_model=Owner)
 async def create(
     data: OwnerCreate,
-    user=Depends(require_role(["admin"]))
+    user=Depends(require_role(["admin", "ADMIN"]))  # ✅ FIX
 ):
     return await create_owner(data)
 
@@ -42,7 +41,7 @@ async def create(
 async def list_all(
     status: Optional[str] = None,
     limit: int = 100,
-    user=Depends(require_role(["admin"]))
+    user=Depends(require_role(["admin", "ADMIN"]))  # ✅ FIX
 ):
     filters = {}
     if status:
@@ -53,7 +52,7 @@ async def list_all(
 @router.get("/{owner_id}", response_model=Owner)
 async def get_one(
     owner_id: str,
-    user=Depends(require_role(["admin"]))
+    user=Depends(require_role(["admin", "ADMIN"]))  # ✅ FIX
 ):
     return await get_owner_by_id(owner_id)
 
@@ -62,7 +61,7 @@ async def get_one(
 async def update(
     owner_id: str,
     data: OwnerUpdate,
-    user=Depends(require_role(["admin"]))
+    user=Depends(require_role(["admin", "ADMIN"]))  # ✅ FIX
 ):
     return await update_owner(owner_id, data)
 
@@ -70,7 +69,7 @@ async def update(
 @router.delete("/{owner_id}")
 async def delete(
     owner_id: str,
-    user=Depends(require_role(["admin"]))
+    user=Depends(require_role(["admin", "ADMIN"]))  # ✅ FIX
 ):
     await delete_owner(owner_id)
     return {"message": "Owner deleted successfully"}

@@ -1,24 +1,26 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
-class RequestOTP(BaseModel):
-    phone: str = Field(..., pattern=r"^[6-9]\d{9}$")
+class RegisterSchema(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
 
 
-class VerifyOTP(BaseModel):
-    phone: str = Field(..., pattern=r"^[6-9]\d{9}$")
-    otp: str = Field(..., min_length=6, max_length=6)
+class VerifyEmailOtpSchema(BaseModel):
+    email: EmailStr
+    otp: str
 
 
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+class LoginSchema(BaseModel):
+    email: EmailStr
+    password: str
 
 
-class UserAuthResponse(BaseModel):
-    id: str
-    phone: str
-    role: str
-    is_new_user: bool
-    access_token: str
-    refresh_token: str
-    expires_in: int
+# 🔐 FORGOT PASSWORD
+class ForgotPasswordSchema(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)

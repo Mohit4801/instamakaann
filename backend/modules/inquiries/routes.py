@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from typing import Optional, List
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from modules.inquiries.schemas import Inquiry, InquiryCreate, InquiryUpdate
 from modules.inquiries.service import (
@@ -11,6 +14,7 @@ from modules.inquiries.service import (
 )
 
 from core.database import get_db
+
 try:
     # current working RBAC
     from core.security import require_role
@@ -25,16 +29,28 @@ except ImportError:
             return _noop
 
 
+limiter = Limiter(key_func=get_remote_address)
+
 router = APIRouter(
     prefix="/inquiries",
     tags=["Inquiries"]
 )
 
+# -----------------------
+# PUBLIC INQUIRY (RATE LIMITED)
+# -----------------------
 
 @router.post("/", response_model=Inquiry)
-async def create(data: InquiryCreate):
+@limiter.limit("10/minute")
+async def create(
+    request: Request,        # ✅ required by slowapi
+    data: InquiryCreate
+):
     return await create_inquiry(data)
 
+# -----------------------
+# ADMIN / AGENT INQUIRIES (UNCHANGED)
+# -----------------------
 
 @router.get("/", response_model=List[Inquiry])
 async def list_all(

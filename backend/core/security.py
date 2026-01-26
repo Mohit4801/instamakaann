@@ -91,6 +91,7 @@ def decode_token(token: str):
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
+    db=Depends(get_db),
 ):
     payload = decode_token(credentials.credentials)
     if not payload or payload.get("type") != "access":

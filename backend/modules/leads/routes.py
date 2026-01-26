@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from typing import List, Optional
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from modules.leads.schemas import (
     TenantLeadCreate,
@@ -10,6 +13,7 @@ from modules.leads.schemas import (
     LeadNoteCreate
 )
 from modules.leads import service
+
 try:
     from core.rbac import require_role
 except ImportError:
@@ -19,10 +23,20 @@ except ImportError:
         return _noop
 
 
+limiter = Limiter(key_func=get_remote_address)
+
 router = APIRouter(prefix="/leads", tags=["Leads"])
 
+# -----------------------
+# PUBLIC LEADS (RATE LIMITED)
+# -----------------------
+
 @router.post("/tenant", response_model=LeadResponse)
-def create_tenant_lead(payload: TenantLeadCreate):
+@limiter.limit("10/minute")
+def create_tenant_lead(
+    request: Request,          # ✅ required by slowapi
+    payload: TenantLeadCreate
+):
     lead, error = service.create_tenant_lead(payload.dict())
     if error:
         raise HTTPException(status_code=400, detail=error)
@@ -30,7 +44,11 @@ def create_tenant_lead(payload: TenantLeadCreate):
 
 
 @router.post("/owner", response_model=LeadResponse)
-def create_owner_lead(payload: OwnerLeadCreate):
+@limiter.limit("10/minute")
+def create_owner_lead(
+    request: Request,          # ✅ required by slowapi
+    payload: OwnerLeadCreate
+):
     lead, error = service.create_owner_lead(payload.dict())
     if error:
         raise HTTPException(status_code=400, detail=error)
@@ -39,6 +57,10 @@ def create_owner_lead(payload: OwnerLeadCreate):
         "created": True,
         "brochure_url": "https://instamakaan.com/brochure.pdf"
     }
+
+# -----------------------
+# ADMIN LEADS (UNCHANGED)
+# -----------------------
 
 @router.get(
     "/admin/leads",

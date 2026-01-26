@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from typing import Optional, List
 from datetime import datetime, timezone
-
+from uuid import uuid4
+import os
+from core.database import log_audit
 from modules.properties.schemas import Property, PropertyCreate, PropertyUpdate
 from modules.properties.service import (
     create_property,
@@ -11,25 +13,17 @@ from modules.properties.service import (
     delete_property,
 )
 
-try:
-    # current working RBAC
-    from core.security import require_role
-except ImportError:
-    try:
-        # future RBAC 
-        from core.rbac import require_role
-    except ImportError:
-        def require_role(roles):
-            async def _noop():
-                return None
-            return _noop
-
+from core.database import get_db
+from core.security import require_role
 
 router = APIRouter(
     prefix="/properties",
     tags=["Properties"]
 )
 
+# -----------------------
+# EXISTING PROPERTY APIs (UNCHANGED)
+# -----------------------
 
 @router.post("/", response_model=Property)
 async def create(
@@ -78,7 +72,14 @@ async def delete(
 ):
     await delete_property(property_id)
     return {"message": "Property deleted successfully"}
-
+    await log_audit(
+    db,
+    user_id=user["id"],
+    role=user["role"],
+    action="delete_property",
+    resource="property",
+    resource_id=property_id,
+)
 
 @router.post("/{property_id}/images")
 async def add_images(
@@ -89,7 +90,6 @@ async def add_images(
     prop = await get_property_by_id(property_id)
     updated = prop.get("images", []) + images
 
-    from core.database import get_db
     db = get_db()
 
     await db.properties.update_one(
@@ -101,6 +101,60 @@ async def add_images(
     )
 
     return {"message": "Images added", "images": updated}
+
+# -----------------------
+# STEP 3 — MEDIA UPLOAD (NEW, SAFE)
+# -----------------------
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_VIDEO_TYPES = {"video/mp4", "video/webm"}
+MAX_FILE_SIZE_MB = 20
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.post("/media")
+async def upload_media(
+    file: UploadFile = File(...),
+    user=Depends(require_role(["admin"])),
+    db=Depends(get_db)
+):
+    # Validate type
+    if file.content_type not in (ALLOWED_IMAGE_TYPES | ALLOWED_VIDEO_TYPES):
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+
+    contents = await file.read()
+    size_mb = len(contents) / (1024 * 1024)
+
+    # Validate size
+    if size_mb > MAX_FILE_SIZE_MB:
+        raise HTTPException(status_code=400, detail="File too large")
+
+    media_id = str(uuid4())
+    extension = file.filename.split(".")[-1]
+    filename = f"{media_id}.{extension}"
+    path = f"{UPLOAD_DIR}/{filename}"
+
+    with open(path, "wb") as f:
+        f.write(contents)
+
+    media_doc = {
+        "id": media_id,
+        "filename": filename,
+        "path": path,
+        "content_type": file.content_type,
+        "uploaded_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    await db.media.insert_one(media_doc)
+
+    return {
+        "media_id": media_id,
+        "url": f"/{path}",
+        "type": file.content_type
+    }
 
 
 @router.get("/ping")
