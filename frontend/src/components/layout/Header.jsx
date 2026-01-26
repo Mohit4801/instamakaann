@@ -46,12 +46,10 @@ export const Header = () => {
 
 	const isActive = (path) => location.pathname === path;
 
-	// Toggle More Menu
 	const toggleMore = () => {
 		setOpenMore((prev) => !prev);
 	};
 
-	// Close More Menu when clicked outside
 	useEffect(() => {
 		const handleClickOutside = (e) => {
 			const target = e.target;
@@ -67,20 +65,30 @@ export const Header = () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, [openMore]);
+	useEffect(() => {
+		if (isMobileMenuOpen) {
+			document.body.classList.add('menu-open-blur');
+		} else {
+			document.body.classList.remove('menu-open-blur');
+		}
+
+		return () => document.body.classList.remove('menu-open-blur');
+	}, [isMobileMenuOpen]);
 
 	return (
 		<header
 			className={cn(
-				'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+				'fixed top-0 left-0 right-0 z-[9999] transition-all duration-300',
+				'overflow-visible',
 				isScrolled
 					? 'bg-white/90 dark:bg-[#0b1220]/90 backdrop-blur-xl shadow-sm'
 					: 'bg-white/80 dark:bg-[#0b1220]/75 backdrop-blur-lg',
 			)}
 		>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex items-center justify-between h-14">
+				<div className="flex items-center justify-between h-14 w-full">
 					{/* LOGO */}
-					<Link to="/" className="flex items-center gap-2 mr-6 lg:mr-10">
+					<Link to="/" className="flex items-center gap-2 mr-3 shrink-0">
 						<CustomIcon src="/images/orglogo.png" className="h-8 w-8" />
 						<div className="leading-tight">
 							<div className="text-sm font-bold text-slate-900 dark:text-teal-400">
@@ -92,7 +100,7 @@ export const Header = () => {
 						</div>
 					</Link>
 
-					{/* LEFT NAV */}
+					{/* LEFT NAV (DESKTOP) */}
 					<nav className="hidden lg:flex items-center gap-8 xl:gap-10">
 						{navLinks.map((link) => (
 							<Link
@@ -110,8 +118,9 @@ export const Header = () => {
 						))}
 
 						{/* MORE */}
-						<div className="relative more-dropdown-container">
+						<div className="relative more-dropdown-container z-[9999]">
 							<button
+								type="button"
 								onClick={toggleMore}
 								className="flex items-center gap-1 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-teal-600"
 							>
@@ -125,7 +134,7 @@ export const Header = () => {
 							</button>
 
 							{openMore && (
-								<div className="absolute top-full mt-2 w-40 rounded-xl bg-white dark:bg-[#0b1220] border shadow-lg overflow-hidden z-50">
+								<div className="absolute top-full mt-2 w-40 rounded-xl bg-white dark:bg-[#0b1220] border shadow-lg overflow-hidden z-[99999]">
 									{moreLinks.map((l) => (
 										<Link
 											key={l.path}
@@ -141,15 +150,14 @@ export const Header = () => {
 						</div>
 					</nav>
 
-					{/* RIGHT ACTIONS */}
+					{/* RIGHT ACTIONS (DESKTOP) */}
 					<div className="hidden lg:flex items-center gap-3 lg:gap-4 xl:gap-5">
-						<Button variant="yellow" size="sm" asChild>
-							<Link to="/partner">Get Owners</Link>
-						</Button>
 						<Button variant="teal" size="sm" asChild>
 							<Link to="/contact">Contact Us</Link>
 						</Button>
+
 						<button
+							type="button"
 							onClick={toggleTheme}
 							className="w-9 h-9 flex items-center justify-center rounded-full border dark:border-white/20"
 						>
@@ -169,53 +177,109 @@ export const Header = () => {
 						</Link>
 					</div>
 
-					{/* MOBILE MENU */}
-					<Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-						<SheetTrigger asChild className="lg:hidden ml-auto">
-							<Button variant="ghost" size="icon">
-								<Menu className="w-5 h-5" />
-							</Button>
-						</SheetTrigger>
-						<SheetContent
-							side="right"
-							className="w-[300px] p-4 dark:bg-[#0b1220]"
-						>
-							<nav className="space-y-2">
-								{[...navLinks, ...moreLinks].map((link) => (
-									<Link
-										key={link.path}
-										to={link.path}
-										onClick={() => setIsMobileMenuOpen(false)}
-										className="block px-4 py-2 rounded-lg text-slate-800 dark:text-slate-200"
-									>
-										{link.name}
-									</Link>
-								))}
-
-								{/* DARK MODE BUTTON FOR MOBILE */}
+					{/* ✅ MOBILE MENU */}
+					<div className="lg:hidden flex items-center justify-end shrink-0">
+						<Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+							<SheetTrigger asChild>
 								<button
-									onClick={toggleTheme}
-									className="w-full flex items-center gap-2 px-4 py-2 mt-3 rounded-lg border dark:border-white/20 text-slate-800 dark:text-slate-200"
+									type="button"
+									className="w-10 h-10 flex items-center justify-center rounded-full border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur"
 								>
-									{theme === 'light' ? (
-										<Moon className="w-4 h-4" />
-									) : (
-										<Sun className="w-4 h-4" />
-									)}
-									{theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+									<Menu className="w-5 h-5 text-slate-900 dark:text-white" />
 								</button>
+							</SheetTrigger>
 
-								<div className="pt-3 border-t dark:border-white/10">
-									<Link
-										to="/contact"
-										className="block px-4 py-2 rounded-lg border text-center"
-									>
-										Contact Us
-									</Link>
+							<SheetContent
+								side="right"
+								className="w-[320px] p-0 dark:bg-[#0b1220] bg-white overflow-hidden h-[100dvh] max-h-[100dvh] z-[10000]"
+								onInteractOutside={() => setIsMobileMenuOpen(false)}
+								onEscapeKeyDown={() => setIsMobileMenuOpen(false)}
+							>
+								{/* ✅ FULL SCROLL AREA */}
+								<div className="h-full overflow-y-auto overscroll-contain">
+									{/* Header inside menu */}
+									<div className="p-5 border-b border-slate-200/60 dark:border-white/10 bg-gradient-to-b from-teal-50/60 to-white dark:from-white/5 dark:to-transparent sticky top-0 z-10">
+										<div className="flex items-center justify-between">
+											<Link
+												to="/"
+												onClick={() => setIsMobileMenuOpen(false)}
+												className="flex items-center gap-2"
+											>
+												<CustomIcon
+													src="/images/orglogo.png"
+													className="h-8 w-8"
+												/>
+												<div className="leading-tight">
+													<div className="text-sm font-bold text-slate-900 dark:text-teal-400">
+														Insta
+													</div>
+													<div className="text-sm font-bold text-slate-900 dark:text-yellow-400 -mt-1">
+														Makaan
+													</div>
+												</div>
+											</Link>
+										</div>
+									</div>
+
+									{/* Links */}
+									<div className="p-5 space-y-3">
+										<p className="text-xs tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
+											NAVIGATION
+										</p>
+
+										{[...navLinks, ...moreLinks].map((link) => (
+											<Link
+												key={link.path}
+												to={link.path}
+												onClick={() => setIsMobileMenuOpen(false)}
+												className={cn(
+													'block px-4 py-3 rounded-2xl text-sm font-medium transition',
+													isActive(link.path)
+														? 'bg-teal-600 text-white shadow'
+														: 'bg-slate-100/70 dark:bg-white/5 text-slate-800 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-white/10',
+												)}
+											>
+												{link.name}
+											</Link>
+										))}
+
+										{/* Theme Toggle */}
+										<button
+											type="button"
+											onClick={toggleTheme}
+											className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border dark:border-white/10 bg-white/60 dark:bg-white/5"
+										>
+											{theme === 'light' ? (
+												<Moon className="w-4 h-4" />
+											) : (
+												<Sun className="w-4 h-4" />
+											)}
+											{theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+										</button>
+
+										{/* Actions */}
+										<div className="pt-2 space-y-3 pb-8">
+											<Link
+												to="/contact"
+												onClick={() => setIsMobileMenuOpen(false)}
+												className="block w-full text-center px-4 py-3 rounded-2xl bg-teal-600 text-white font-semibold shadow"
+											>
+												Contact Us
+											</Link>
+
+											<Link
+												to="/auth/login"
+												onClick={() => setIsMobileMenuOpen(false)}
+												className="block w-full text-center px-4 py-3 rounded-2xl border dark:border-white/10 bg-white/60 dark:bg-white/5 font-semibold"
+											>
+												Login
+											</Link>
+										</div>
+									</div>
 								</div>
-							</nav>
-						</SheetContent>
-					</Sheet>
+							</SheetContent>
+						</Sheet>
+					</div>
 				</div>
 			</div>
 		</header>

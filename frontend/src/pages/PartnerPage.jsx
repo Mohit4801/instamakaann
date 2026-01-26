@@ -13,24 +13,18 @@ gsap.registerPlugin(ScrollTrigger);
 const heroSlides = [
 	{
 		headline: 'End the Renting Headaches. Discover True Rental Sukoon.',
-		description:
-			'Transform your property management experience with InstaMakaan.',
 		image: '/images/owner-1.jpg',
 	},
 	{
 		headline: 'Predictable Income, Guaranteed Peace of Mind.',
-		description:
-			'Never worry about missed rent payments or difficult tenants again.',
 		image: '/images/owner-2.jpg',
 	},
 	{
 		headline: 'We Handle It All, You Enjoy the Returns.',
-		description: 'From tenant screening to maintenance, we manage everything.',
 		image: '/images/owner-3.jpg',
 	},
 	{
 		headline: "Unlock Your Property's Full Potential.",
-		description: 'Maximize your rental income with professional management.',
 		image: '/images/owner-4.jpg',
 	},
 ];
@@ -39,7 +33,7 @@ const heroSlides = [
 const services = [
 	{
 		id: 'payment',
-		headline: 'Never Chase Rent Again.',
+		headline: 'Never Chase Rent Again, Ever .',
 		video: '/videos/rent.mp4',
 		features: [
 			'Automated reminders & follow-ups.',
@@ -149,13 +143,16 @@ const PartnerPage = () => {
 				/>
 				<div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white/90 dark:from-[#0b1220]/90 dark:via-[#0b1220]/85 dark:to-[#0b1220]/95 " />
 
-				<div className="relative z-10 min-h-screen flex items-center justify-center text-center px-6">
+				<div className="relative z-10 min-h-screen flex items-center justify-center text-center px-4 sm:px-6">
 					<div className="max-w-5xl">
-						<h1 className="text-4xl md:text-5xl font-bold mb-6">
-							Are You a Property Owner?
+						<h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-bold text-teal-500 dark:text-white whitespace-normal sm:whitespace-nowrap leading-tight">
+							Are You a Property{' '}
+							<span className="text-yellow-500 dark:text-teal-400 font-bold ml-2">
+								Owner?
+							</span>
 						</h1>
 
-						<h2 className="text-2xl md:text-3xl text-teal-500 mb-4">
+						<h2 className="text-2xl sm:text-2xl md:text-3xl mb-4 mt-6 text-gray-700">
 							{heroSlides[currentSlide].headline}
 						</h2>
 
@@ -178,13 +175,13 @@ const PartnerPage = () => {
 				>
 					<div className="container-custom">
 						<Card className="relative rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-[#0b1220]">
-							<CardContent className="grid md:grid-cols-2 gap-10 items-center p-6 md:p-10">
+							<CardContent className="grid md:grid-cols-2 gap-8 md:gap-10 items-center p-4 sm:p-6 md:p-10">
 								{/* PHONE / VIDEO — OLD FULL ANIMATION */}
 								<div className="relative flex justify-center items-center">
-									<div className="absolute w-[360px] h-[440px] bg-gradient-to-br from-teal-400/40 via-cyan-300/30 to-yellow-300/30 rounded-full blur-3xl animate-glow" />
+									<div className="absolute w-[260px] h-[320px] sm:w-[360px] sm:h-[440px] bg-gradient-to-br from-teal-400/40 via-cyan-300/30 to-yellow-300/30 rounded-full blur-3xl animate-glow" />
 
 									<svg
-										className="absolute w-[500px] opacity-40 animate-wave"
+										className="absolute w-[360px] sm:w-[500px] opacity-40 animate-wave"
 										viewBox="0 0 400 200"
 										fill="none"
 									>
@@ -209,7 +206,7 @@ const PartnerPage = () => {
 										</span>
 									))}
 
-									<div className="relative z-10 w-[230px] sm:w-[260px] md:w-[300px] aspect-[9/19] rounded-[36px] bg-neutral-900 shadow-2xl animate-phone overflow-hidden border-[4px] border-neutral-700">
+									<div className="relative z-10 w-[210px] xs:w-[230px] sm:w-[260px] md:w-[300px] aspect-[9/19] rounded-[40px] sm:rounded-[45px] shadow-2xl animate-phone overflow-hidden">
 										<video
 											src={service.video}
 											autoPlay
@@ -218,13 +215,13 @@ const PartnerPage = () => {
 											playsInline
 											className="w-full h-full object-cover"
 										/>
-										<div className="absolute top-2 left-1/2 -translate-x-1/2 w-[92px] h-[26px] bg-black rounded-full" />
-										<div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/30 rounded-full" />
+										{/* <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[92px] h-[26px] bg-black rounded-full" /> */}
+										{/* <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/30 rounded-full" /> */}
 									</div>
 								</div>
 
 								{/* TEXT — SAME AS SCREENSHOT */}
-								<div className="relative text-anim overflow-hidden rounded-3xl p-6">
+								<div className="relative text-anim overflow-hidden rounded-3xl p-5 w-full max-w-none ">
 									{/* BACKGROUND GRADIENT */}
 									<div className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-50 via-white to-yellow-50 dark:from-[#0f1f2e] dark:via-[#0b1220] dark:to-[#1a1405]" />
 
@@ -246,7 +243,7 @@ const PartnerPage = () => {
 										/>
 									</svg>
 
-									<h3 className="text-2xl font-bold mb-5">
+									<h3 className="text-2xl sm:text-3xl md:text-5xl font-extrabold mb-5 sm:mb-6 whitespace-normal">
 										{service.headline}
 									</h3>
 

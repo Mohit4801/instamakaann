@@ -16,36 +16,29 @@ export const CompanyTieUpsSection = () => {
 	const [isPaused, setIsPaused] = useState(false);
 
 	return (
-		// ❌ overflow-hidden REMOVED (bahar nikalne do)
-		<section className="py-12 sm:py-16 bg-slate-50 dark:bg-neutral-950">
-			{/* ❌ max-w-7xl mx-auto REMOVED */}
-			<div className="w-full px-6 sm:px-10 lg:px-16">
-				{/* HEADER */}
-				<div className="mb-8 sm:mb-12">
-					{/* ❌ text-center REMOVED */}
-					<h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold mb-3 sm:mb-4 text-teal-900 dark:text-white text-center">
-						Trusted By Leading Companies
-					</h2>
+		<section className="py-16 md:py-20 bg-slate-50 dark:bg-neutral-950">
+			{/* ================= HEADER ================= */}
+			<div className="container-custom mb-10">
+				<h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white text-center mb-4">
+					Trusted By Leading Companies
+				</h2>
 
-					{/* ❌ max-w-xl mx-auto REMOVED */}
-					<p className="text-base sm:text-lg text-teal-600 dark:text-gray-400 text-center">
-						We are a preferred rental partner for corporations in Noida &
-						Greater Noida, helping their employees find verified homes,
-						hassle-free.
-					</p>
-				</div>
+				<p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 text-center max-w-2xl mx-auto">
+					We are a preferred rental partner for corporations in Noida & Greater
+					Noida, helping their employees find verified homes, hassle-free.
+				</p>
 			</div>
 
-			{/* MARQUEE (SAME) */}
+			{/* ================= MARQUEE ================= */}
 			<div
-				className="relative w-full"
+				className="relative w-full overflow-hidden"
 				onMouseEnter={() => setIsPaused(true)}
 				onMouseLeave={() => setIsPaused(false)}
 			>
 				<div className="flex">
 					<div
 						className={cn(
-							'flex items-center gap-8 sm:gap-12 lg:gap-16 animate-marquee',
+							'flex items-center gap-6 sm:gap-10 lg:gap-14 animate-marquee',
 							isPaused && 'pause-animation',
 						)}
 					>
@@ -53,8 +46,8 @@ export const CompanyTieUpsSection = () => {
 							<div
 								key={`${company.name}-${index}`}
 								className="
-                  w-28 h-20
-                  sm:w-36 sm:h-22
+                  w-24 h-16
+                  sm:w-32 sm:h-20
                   lg:w-40 lg:h-24
                   flex-shrink-0
                   bg-white dark:bg-neutral-900
@@ -63,7 +56,7 @@ export const CompanyTieUpsSection = () => {
                   flex flex-col items-center justify-center
                 "
 							>
-								<div className="text-xl sm:text-2xl font-bold text-gray-400 dark:text-gray-500">
+								<div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-400 dark:text-gray-500">
 									{company.logo}
 								</div>
 								<div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -74,28 +67,26 @@ export const CompanyTieUpsSection = () => {
 					</div>
 				</div>
 
-				{/* FADE EDGES (SAME) */}
-				<div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-24 lg:w-28 bg-gradient-to-r from-slate-50 dark:from-neutral-950 to-transparent" />
-				<div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-24 lg:w-28 bg-gradient-to-l from-slate-50 dark:from-neutral-950 to-transparent" />
+				{/* ================= FADE EDGES ================= */}
+				<div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-slate-50 dark:from-neutral-950 to-transparent" />
+				<div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-50 dark:from-neutral-950 to-transparent" />
 			</div>
 
-			{/* ANIMATION (SAME) */}
-			<style jsx>{`
-				@keyframes marquee {
-					from {
-						transform: translateX(0);
-					}
-					to {
-						transform: translateX(-50%);
-					}
-				}
-				.animate-marquee {
-					animation: marquee 30s linear infinite;
-				}
-				.pause-animation {
-					animation-play-state: paused;
-				}
-			`}</style>
+			{/* ================= CSS ================= */}
+			<style>{`
+        @keyframes marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+
+        .animate-marquee {
+          animation: marquee 28s linear infinite;
+        }
+
+        .pause-animation {
+          animation-play-state: paused;
+        }
+      `}</style>
 		</section>
 	);
 };

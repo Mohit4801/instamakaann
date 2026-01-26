@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
+import { User, Phone } from 'lucide-react';
 import {
 	MapPin,
 	ChevronLeft,
@@ -22,7 +23,14 @@ import {
 	Plug,
 } from 'lucide-react';
 
-/* ---------------- ICON MAP (NO EMOJIS) ---------------- */
+/* ---------- SAFE NUMBER PARSER ---------- */
+const toNumber = (val) => {
+	if (!val) return 0;
+	if (typeof val === 'number') return val;
+	return Number(val.toString().replace(/[^\d]/g, '')) || 0;
+};
+
+/* ---------- ICON MAP ---------- */
 const iconMap = {
 	Lift: <Home size={14} />,
 	Parking: <Car size={14} />,
@@ -41,7 +49,7 @@ const iconMap = {
 	TV: <Plug size={14} />,
 };
 
-/* ---------------- AMENITY COLOR MAP ---------------- */
+/* ---------- AMENITY COLOR MAP ---------- */
 const amenityBgMap = {
 	House: 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800',
 	'Living Room':
@@ -52,7 +60,7 @@ const amenityBgMap = {
 		'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
 };
 
-/* ---------------- PARSER (FIXED – GROUP WISE) ---------------- */
+/* ---------- AMENITIES PARSER (ULTRA SAFE FIX) ---------- */
 const parseAmenities = (amenitiesArray = []) => {
 	const base = {
 		House: [],
@@ -61,18 +69,36 @@ const parseAmenities = (amenitiesArray = []) => {
 		Bedroom: [],
 	};
 
-	amenitiesArray.forEach((item) => {
-		// Case 1: "House:Lift"
-		if (typeof item === 'string' && item.includes(':')) {
-			const [section, value] = item.split(':');
-			if (base[section]) base[section].push(value);
-		}
+	if (!Array.isArray(amenitiesArray) || amenitiesArray.length === 0) {
+		return base;
+	}
 
-		// Case 2: { House: ["Lift", "Power Backup"] }
-		if (typeof item === 'object' && item !== null) {
-			Object.entries(item).forEach(([section, values]) => {
-				if (base[section] && Array.isArray(values)) {
-					base[section].push(...values);
+	let raw = amenitiesArray[0];
+
+	// 🧨 CASE: amenities stored as STRING
+	if (typeof raw === 'string') {
+		try {
+			// 🔧 Fix invalid JSON (single quotes + unquoted keys)
+			raw = raw
+				.replace(/'/g, '"') // single → double quotes
+				.replace(/(\w+)\s*:/g, '"$1":'); // House: → "House":
+
+			raw = JSON.parse(raw);
+		} catch (err) {
+			console.error('Amenity parse failed:', err);
+			return base;
+		}
+	}
+
+	if (!Array.isArray(raw)) return base;
+
+	raw.forEach((block) => {
+		if (typeof block === 'object' && block !== null) {
+			Object.entries(block).forEach(([section, items]) => {
+				const cleanSection = section.trim();
+
+				if (base[cleanSection] && Array.isArray(items)) {
+					base[cleanSection] = items;
 				}
 			});
 		}
@@ -80,8 +106,6 @@ const parseAmenities = (amenitiesArray = []) => {
 
 	return base;
 };
-
-/* ---------------- COMPONENT ---------------- */
 const PropertyDetailPage = () => {
 	const { id } = useParams();
 	const [property, setProperty] = useState(null);
@@ -114,6 +138,17 @@ const PropertyDetailPage = () => {
 			</Layout>
 		);
 	}
+	// ---------- RENT CALCULATION (FIXED LOGIC) ----------
+	const monthlyRent = toNumber(property.price);
+
+	// 2 months deposit
+	const securityDeposit = monthlyRent * 2;
+
+	// 15 days = half month
+	const oneTimeFees = monthlyRent / 2;
+
+	// total payable
+	const totalPayable = monthlyRent + securityDeposit + oneTimeFees;
 
 	const images =
 		Array.isArray(property.images) && property.images.length > 0
@@ -137,46 +172,74 @@ const PropertyDetailPage = () => {
 					</div>
 
 					{/* GALLERY */}
-					<div className="relative h-[420px] rounded-2xl overflow-hidden shadow">
-						<img
-							src={images[index]}
-							className="w-full h-full object-cover"
-							alt=""
-						/>
-						<button
-							onClick={() =>
-								setIndex(index === 0 ? images.length - 1 : index - 1)
-							}
-							className="absolute left-4 top-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 p-2 rounded-full"
-						>
-							<ChevronLeft />
-						</button>
-						<button
-							onClick={() => setIndex((index + 1) % images.length)}
-							className="absolute right-4 top-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 p-2 rounded-full"
-						>
-							<ChevronRight />
-						</button>
+					{/* ADVANCED GALLERY */}
+					<div className="space-y-4">
+						{/* MAIN IMAGE */}
+						<div className="relative h-[420px] rounded-2xl overflow-hidden shadow group">
+							<img
+								src={images[index]}
+								className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+								alt="Property"
+							/>
+
+							{/* LEFT ARROW */}
+							<button
+								onClick={() =>
+									setIndex(index === 0 ? images.length - 1 : index - 1)
+								}
+								className="absolute left-4 top-1/2 -translate-y-1/2 
+			bg-white/80 backdrop-blur p-2 rounded-full shadow 
+			hover:scale-110 transition"
+							>
+								<ChevronLeft />
+							</button>
+
+							{/* RIGHT ARROW */}
+							<button
+								onClick={() => setIndex((index + 1) % images.length)}
+								className="absolute right-4 top-1/2 -translate-y-1/2 
+			bg-white/80 backdrop-blur p-2 rounded-full shadow 
+			hover:scale-110 transition"
+							>
+								<ChevronRight />
+							</button>
+						</div>
+
+						{/* THUMBNAILS (MAX 3, SAFE) */}
+						<div className="grid grid-cols-3 gap-4">
+							{images.slice(0, 3).map((img, i) => (
+								<button
+									key={i}
+									onClick={() => setIndex(i)}
+									className={`relative h-40 rounded-xl overflow-hidden border-2 
+				${index === i ? 'border-amber-500' : 'border-transparent'}
+				hover:scale-[1.03] transition`}
+								>
+									<img
+										src={img}
+										className="w-full h-full object-cover"
+										alt="Thumbnail"
+									/>
+
+									{/* OVERLAY FOR EXTRA IMAGES */}
+									{i === 2 && images.length > 3 && (
+										<div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-semibold">
+											+{images.length - 3}
+										</div>
+									)}
+								</button>
+							))}
+						</div>
 					</div>
 
-					{/* PRICE */}
-					<div className="grid sm:grid-cols-3 gap-4">
-						<div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow">
-							<IndianRupee className="text-teal-600" />
-							<p className="font-bold">{property.price}</p>
-						</div>
-						<div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow">
-							<Wallet className="text-teal-600" />
-							<p className="font-bold">{property.deposit || 'N/A'}</p>
-						</div>
-						<div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow">
-							<BadgeCheck className="text-teal-600" />
-							<p className="font-bold">
-								{property.brokerage || 'No Brokerage'}
-							</p>
-						</div>
-					</div>
+					{/* PROPERTY DESCRIPTION */}
+					<h2 className="text-2xl font-bold">Description</h2>
 
+					<div className="bg-white dark:bg-neutral-900 rounded-2xl shadow p-6">
+						<p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+							{property.description || 'No description available.'}
+						</p>
+					</div>
 					{/* AMENITIES */}
 					<h2 className="text-2xl font-bold">Amenities</h2>
 
@@ -194,9 +257,7 @@ const PropertyDetailPage = () => {
 									<div className="grid grid-cols-2 gap-3 text-sm">
 										{items.map((item, i) => (
 											<div key={i} className="flex items-center gap-2">
-												<span>
-													{iconMap[item] || <CheckCircle size={14} />}
-												</span>
+												{iconMap[item] || <CheckCircle size={14} />}
 												{item}
 											</div>
 										))}
@@ -205,46 +266,133 @@ const PropertyDetailPage = () => {
 							</div>
 						))}
 					</div>
-				</div>
 
-				{/* RIGHT SIDEBAR */}
-				<div className="sticky top-24 self-start h-fit">
-					<div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-lg overflow-hidden">
-						<div className="p-6 border-b border-gray-200 dark:border-neutral-700">
-							<h3 className="font-semibold mb-4 flex items-center gap-2">
-								<CalendarDays className="text-teal-600" />
-								Schedule Visit
-							</h3>
+					{/* RENT DETAILS / PRICE BREAKUP */}
+					<h2 className="text-2xl font-bold mt-12">Rent Details</h2>
 
-							<input
-								className="w-full mb-3 p-2 border rounded bg-white dark:bg-neutral-800 dark:border-neutral-700"
-								placeholder="Name"
-							/>
-							<input
-								className="w-full mb-4 p-2 border rounded bg-white dark:bg-neutral-800 dark:border-neutral-700"
-								placeholder="Phone"
-							/>
-							<button className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded">
-								Contact Owner
-							</button>
+					<div className="bg-white dark:bg-neutral-900 rounded-2xl shadow p-6 space-y-6">
+						<div className="flex justify-between">
+							<p className="font-medium">Monthly rent</p>
+							<p className="font-semibold">₹ {property.price}</p>
 						</div>
 
-						<div className="p-6">
-							<h4 className="font-semibold mb-4">People also searched</h4>
+						<div className="flex justify-between">
+							<p className="font-medium">Security deposit</p>
+							<p className="font-semibold">₹ {property.deposit || 0}</p>
+						</div>
 
-							{related.map((p) => (
-								<Link
-									key={p.id}
-									to={`/property/${p.id}`}
-									className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
+						<div className="flex justify-between">
+							<p className="font-medium">One-time fees</p>
+							<p className="font-semibold">₹ {property.brokerage || 0}</p>
+						</div>
+
+						<hr className="border-gray-200 dark:border-neutral-700" />
+
+						<div className="flex justify-between text-teal-600 dark:text-teal-400">
+							<p className="font-semibold text-lg">Total payable amount</p>
+							<p className="font-bold text-xl">
+								₹{' '}
+								{toNumber(property.price) +
+									toNumber(property.deposit) +
+									toNumber(property.brokerage)}
+							</p>
+						</div>
+					</div>
+				</div>
+				{/* RIGHT SIDEBAR */}
+				<div className="sticky top-24 self-start">
+					<div className="space-y-8">
+						{/* SCHEDULE VISIT CARD */}
+						<div
+							className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-3xl 
+			shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden border border-gray-100 dark:border-neutral-800"
+						>
+							<div className="p-6 border-b dark:border-neutral-800">
+								<h3 className="font-semibold text-lg mb-5 flex items-center gap-2">
+									<CalendarDays className="text-amber-500" />
+									Schedule Your Visit
+								</h3>
+
+								{/* NAME */}
+								<div className="relative mb-4">
+									<input
+										className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 
+						dark:border-neutral-700 dark:bg-neutral-800 
+						focus:ring-2 focus:ring-amber-400 outline-none transition"
+										placeholder="Your Name"
+									/>
+									<User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+								</div>
+
+								{/* PHONE */}
+								<div className="relative mb-4">
+									<input
+										className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 
+						dark:border-neutral-700 dark:bg-neutral-800 
+						focus:ring-2 focus:ring-amber-400 outline-none transition"
+										placeholder="Phone Number"
+									/>
+									<Phone className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+								</div>
+
+								{/* DATE */}
+								<div className="relative mb-4">
+									<input
+										type="date"
+										className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 
+						dark:border-neutral-700 dark:bg-neutral-800 
+						focus:ring-2 focus:ring-amber-400 outline-none transition"
+									/>
+									<CalendarDays className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+								</div>
+
+								{/* WHATSAPP */}
+								<label className="flex items-center justify-between text-sm mb-6">
+									<span className="text-gray-600 dark:text-gray-400">
+										Get updates over WhatsApp
+									</span>
+									<input
+										type="checkbox"
+										className="accent-green-500 scale-125"
+									/>
+								</label>
+
+								<button
+									className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 
+					text-black py-3 rounded-xl font-semibold shadow-md 
+					hover:scale-[1.03] transition"
 								>
-									<p className="font-medium">{p.title}</p>
-									<p className="text-sm text-gray-500 dark:text-gray-400">
-										{p.location}
-									</p>
-									<p className="text-teal-600 font-semibold">₹ {p.price}</p>
-								</Link>
-							))}
+									Schedule a Visit
+								</button>
+							</div>
+						</div>
+
+						{/* PEOPLE ALSO SEARCHED */}
+						<div
+							className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-3xl 
+			shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border border-gray-100 dark:border-neutral-800"
+						>
+							<div className="p-6">
+								<h4 className="font-semibold mb-5">People also searched</h4>
+
+								<div className="space-y-4">
+									{related.map((p) => (
+										<Link
+											key={p.id}
+											to={`/property/${p.id}`}
+											className="block p-4 rounded-2xl bg-gray-50 
+							dark:bg-neutral-800 hover:shadow-md 
+							hover:-translate-y-1 transition"
+										>
+											<p className="font-medium">{p.title}</p>
+											<p className="text-sm text-gray-500">{p.location}</p>
+											<p className="text-amber-500 font-semibold mt-1">
+												₹ {p.price}
+											</p>
+										</Link>
+									))}
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
