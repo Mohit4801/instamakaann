@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
-const OTP_EXPIRY_SECONDS = 5 * 60; // 5 minutes
+const OTP_EXPIRY_SECONDS = 5 * 60; 
 
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ const VerifyEmailPage = () => {
   };
 
   /* =========================
-     RESEND OTP (FIXED)
+     RESEND OTP 
      ========================= */
   const resendOtp = async () => {
     if (!canResend) return;
