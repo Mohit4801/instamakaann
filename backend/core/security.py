@@ -103,7 +103,7 @@ async def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
-    # ✅ CRITICAL FIX: NORMALIZE ROLE
+    #NORMALIZE ROLE
     if "role" in user and isinstance(user["role"], str):
         user["role"] = user["role"].upper()
 
