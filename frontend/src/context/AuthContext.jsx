@@ -18,7 +18,7 @@ export const useAuth = () => {
   return ctx;
 };
 
-/* 🔐 Simple JWT decode (NO library, same as before) */
+//JWT decode 
 const decodeJWT = (token) => {
   try {
     return JSON.parse(atob(token.split('.')[1]));
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/auth/login', { email, password });
     const { access_token, email_verified } = res.data;
 
-    // 🔴 BLOCK LOGIN IF EMAIL NOT VERIFIED
+    // BLOCK LOGIN IF EMAIL NOT VERIFIED
     if (email_verified === false) {
       return {
         success: false,
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       await api.post('/auth/register', { name, email, password });
-      return { success: true }; // ❗ no auto-login
+      return { success: true }; //  no auto-login
     } catch (err) {
       const detail = err.response?.data?.detail;
 
