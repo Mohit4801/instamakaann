@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).parent
 app = FastAPI(title=APP_NAME)
 
 # =========================
-# LOGGING (STEP 6)
+# LOGGING 
 # =========================
 
 logging.basicConfig(
@@ -59,7 +59,7 @@ async def log_requests(request: Request, call_next):
     return response
 
 # =========================
-# RATE LIMITER (STEP 5)
+# RATE LIMITER 
 # =========================
 
 limiter = Limiter(key_func=get_remote_address)
@@ -74,7 +74,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 
 # =========================
-# GLOBAL ERROR HANDLER (STEP 6)
+# GLOBAL ERROR HANDLER 
 # =========================
 
 @app.exception_handler(Exception)
@@ -123,7 +123,7 @@ app.include_router(whatsapp_webhook_router)
 app.include_router(user_auth_router)
 
 # =========================
-# HEALTH CHECK (STEP 6)
+# HEALTH CHECK 
 # =========================
 
 @app.get("/health", tags=["System"])
