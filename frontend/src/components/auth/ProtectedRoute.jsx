@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   /* ================= ROLE NOT ALLOWED ================= */
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    // 🔥 FIX: normal USER must go to public site
+    
     if (user?.role === 'USER') {
       return <Navigate to="/" replace />;
     }
@@ -55,7 +55,7 @@ export const RoleBasedRedirect = () => {
     );
   }
 
-  // 🔥 FIX: USER goes to homepage
+  // USER goes to homepage
   if (user?.role === 'USER') {
     return <Navigate to="/" replace />;
   }
