@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import api from '@/lib/api'; // ✅ FIX: use token-aware axios
+import api from '@/lib/api'; 
 
 const DashboardPage = () => {
   const [stats, setStats] = useState(null);
@@ -29,7 +29,7 @@ const DashboardPage = () => {
     try {
       const { data } = await api.get('/dashboard/stats');
 
-      // 🔥 normalize backend → frontend expectation
+      //  normalize backend → frontend expectation
       const normalized = {
         ...data,
         recent_inquiries: (data.recent_inquiries || []).map((i) => ({
