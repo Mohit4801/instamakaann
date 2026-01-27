@@ -76,7 +76,7 @@ const InquiriesPage = () => {
     try {
       const { data } = await api.get('/inquiries/');
 
-      // 🔥 BACKEND uses "stage", UI uses "status"
+      // BACKEND uses "stage", UI uses "status"
       const normalized = data.map((i) => ({
         ...i,
         status: i.stage?.toLowerCase(),
