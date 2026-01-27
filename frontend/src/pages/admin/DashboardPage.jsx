@@ -14,8 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+import api from '@/lib/api'; // ✅ FIX: use token-aware axios
 
 const DashboardPage = () => {
   const [stats, setStats] = useState(null);
@@ -25,11 +24,21 @@ const DashboardPage = () => {
     fetchStats();
   }, []);
 
+  /* ================= FETCH DASHBOARD STATS (FIXED) ================= */
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/dashboard/stats`);
-      const data = await response.json();
-      setStats(data);
+      const { data } = await api.get('/dashboard/stats');
+
+      // 🔥 normalize backend → frontend expectation
+      const normalized = {
+        ...data,
+        recent_inquiries: (data.recent_inquiries || []).map((i) => ({
+          ...i,
+          status: i.stage?.toLowerCase(),
+        })),
+      };
+
+      setStats(normalized);
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -78,8 +87,8 @@ const DashboardPage = () => {
 
   const propertyTypeIcons = {
     'pre-occupied': Home,
-    'rent': Key,
-    'buy': Building2,
+    rent: Key,
+    buy: Building2,
   };
 
   return (
@@ -87,8 +96,12 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to InstaMakaan Admin Panel</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Welcome to InstaMakaan Admin Panel
+          </p>
         </div>
         <Button variant="teal" asChild>
           <Link to="/admin/properties/new">
@@ -105,12 +118,19 @@ const DashboardPage = () => {
             <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {stat.title}
+                  </p>
                   <p className="text-2xl md:text-3xl font-bold text-foreground mt-1">
                     {loading ? '-' : stat.value}
                   </p>
                 </div>
-                <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', stat.color)}>
+                <div
+                  className={cn(
+                    'w-12 h-12 rounded-xl flex items-center justify-center',
+                    stat.color
+                  )}
+                >
                   <stat.icon className="w-6 h-6" />
                 </div>
               </div>
@@ -123,29 +143,44 @@ const DashboardPage = () => {
         {/* Properties by Type */}
         <Card className="bg-card border-0 shadow-card">
           <CardHeader>
-            <CardTitle className="text-lg">Properties by Type</CardTitle>
+            <CardTitle className="text-lg">
+              Properties by Type
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <p className="text-muted-foreground">Loading...</p>
             ) : (
               <div className="space-y-4">
-                {Object.entries(stats?.properties_by_type || {}).map(([type, count]) => {
-                  const Icon = propertyTypeIcons[type] || Building2;
-                  return (
-                    <div key={type} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Icon className="w-5 h-5 text-primary" />
+                {Object.entries(stats?.properties_by_type || {}).map(
+                  ([type, count]) => {
+                    const Icon =
+                      propertyTypeIcons[type] || Building2;
+                    return (
+                      <div
+                        key={type}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Icon className="w-5 h-5 text-primary" />
+                          </div>
+                          <span className="font-medium capitalize">
+                            {type.replace('-', ' ')}
+                          </span>
                         </div>
-                        <span className="font-medium capitalize">{type.replace('-', ' ')}</span>
+                        <span className="text-lg font-semibold">
+                          {count}
+                        </span>
                       </div>
-                      <span className="text-lg font-semibold">{count}</span>
-                    </div>
-                  );
-                })}
-                {Object.keys(stats?.properties_by_type || {}).length === 0 && (
-                  <p className="text-muted-foreground text-center py-4">No properties yet</p>
+                    );
+                  }
+                )}
+                {Object.keys(stats?.properties_by_type || {}).length ===
+                  0 && (
+                  <p className="text-muted-foreground text-center py-4">
+                    No properties yet
+                  </p>
                 )}
               </div>
             )}
@@ -155,7 +190,9 @@ const DashboardPage = () => {
         {/* Recent Inquiries */}
         <Card className="bg-card border-0 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Recent Inquiries</CardTitle>
+            <CardTitle className="text-lg">
+              Recent Inquiries
+            </CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/admin/inquiries">View All</Link>
             </Button>
@@ -166,26 +203,38 @@ const DashboardPage = () => {
             ) : (
               <div className="space-y-4">
                 {(stats?.recent_inquiries || []).map((inquiry) => (
-                  <div key={inquiry.id} className="flex items-start justify-between gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                  <div
+                    key={inquiry.id}
+                    className="flex items-start justify-between gap-4 pb-4 border-b border-border last:border-0 last:pb-0"
+                  >
                     <div>
                       <p className="font-medium">{inquiry.name}</p>
-                      <p className="text-sm text-muted-foreground">{inquiry.phone}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {inquiry.phone}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-1 capitalize">
                         {inquiry.inquiry_type?.replace('_', ' ')}
                       </p>
                     </div>
-                    <span className={cn(
-                      'text-xs px-2 py-1 rounded-full font-medium',
-                      inquiry.status === 'new' && 'bg-warning/10 text-warning',
-                      inquiry.status === 'contacted' && 'bg-primary/10 text-primary',
-                      inquiry.status === 'closed' && 'bg-muted text-muted-foreground'
-                    )}>
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-1 rounded-full font-medium',
+                        inquiry.status === 'new' &&
+                          'bg-warning/10 text-warning',
+                        inquiry.status === 'assigned' &&
+                          'bg-primary/10 text-primary',
+                        inquiry.status === 'closed' &&
+                          'bg-muted text-muted-foreground'
+                      )}
+                    >
                       {inquiry.status}
                     </span>
                   </div>
                 ))}
                 {(stats?.recent_inquiries || []).length === 0 && (
-                  <p className="text-muted-foreground text-center py-4">No inquiries yet</p>
+                  <p className="text-muted-foreground text-center py-4">
+                    No inquiries yet
+                  </p>
                 )}
               </div>
             )}

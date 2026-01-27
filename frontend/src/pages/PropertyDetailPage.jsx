@@ -111,6 +111,12 @@ const PropertyDetailPage = () => {
 	const [property, setProperty] = useState(null);
 	const [related, setRelated] = useState([]);
 	const [index, setIndex] = useState(0);
+    
+  const [visitName, setVisitName] = useState('');
+  const [visitPhone, setVisitPhone] = useState('');
+  const [visitDate, setVisitDate] = useState('');
+  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
+  const [visitLoading, setVisitLoading] = useState(false);
 
 	useEffect(() => {
 		const load = async () => {
@@ -128,7 +134,40 @@ const PropertyDetailPage = () => {
 		};
 		load();
 	}, [id]);
+    
+	const submitInquiry = async () => {
+    if (!visitName || !visitPhone || !visitDate) {
+      alert('Please fill all fields');
+      return;
+    }
 
+    setVisitLoading(true);
+    try {
+      await fetch(`${process.env.REACT_APP_API_URL}/inquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: visitName,
+          phone: visitPhone,
+          listing_id: property.id,
+          whatsapp_opt_in: whatsappOptIn,
+          inquiry_type: 'TENANT',
+          source_page: window.location.pathname,
+        }),
+      });
+
+      alert('Visit scheduled successfully');
+      setVisitName('');
+      setVisitPhone('');
+      setVisitDate('');
+      setWhatsappOptIn(false);
+    } catch {
+      alert('Failed to submit inquiry');
+    } finally {
+      setVisitLoading(false);
+    }
+  };
+  
 	if (!property) {
 		return (
 			<Layout>
@@ -320,6 +359,8 @@ const PropertyDetailPage = () => {
 						dark:border-neutral-700 dark:bg-neutral-800 
 						focus:ring-2 focus:ring-amber-400 outline-none transition"
 										placeholder="Your Name"
+										value={visitName}
+                                        onChange={(e) => setVisitName(e.target.value)}
 									/>
 									<User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
 								</div>
@@ -331,6 +372,8 @@ const PropertyDetailPage = () => {
 						dark:border-neutral-700 dark:bg-neutral-800 
 						focus:ring-2 focus:ring-amber-400 outline-none transition"
 										placeholder="Phone Number"
+										value={visitPhone}
+                                        onChange={(e) => setVisitPhone(e.target.value)}
 									/>
 									<Phone className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
 								</div>
@@ -342,6 +385,8 @@ const PropertyDetailPage = () => {
 										className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 
 						dark:border-neutral-700 dark:bg-neutral-800 
 						focus:ring-2 focus:ring-amber-400 outline-none transition"
+						                value={visitDate}
+                                        onChange={(e) => setVisitDate(e.target.value)}
 									/>
 									<CalendarDays className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
 								</div>
@@ -352,18 +397,23 @@ const PropertyDetailPage = () => {
 										Get updates over WhatsApp
 									</span>
 									<input
-										type="checkbox"
-										className="accent-green-500 scale-125"
-									/>
+  type="checkbox"
+  className="accent-green-500 scale-125"
+  checked={whatsappOptIn}
+  onChange={(e) => setWhatsappOptIn(e.target.checked)}
+/>
 								</label>
 
 								<button
-									className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 
-					text-black py-3 rounded-xl font-semibold shadow-md 
-					hover:scale-[1.03] transition"
-								>
-									Schedule a Visit
-								</button>
+  onClick={submitInquiry}
+  disabled={visitLoading}
+  className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 
+    text-black py-3 rounded-xl font-semibold shadow-md 
+    hover:scale-[1.03] transition disabled:opacity-60"
+>
+  {visitLoading ? 'Submitting...' : 'Schedule a Visit'}
+</button>
+
 							</div>
 						</div>
 

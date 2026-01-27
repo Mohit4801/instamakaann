@@ -53,6 +53,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import api from '@/lib/api';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -77,84 +78,78 @@ const AgentsPage = () => {
   }, []);
 
   const fetchAgents = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/agents`);
-      const data = await response.json();
-      setAgents(data);
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      toast.error('Failed to load agents');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const { data } = await api.get('/agents');
+    setAgents(data);
+  } catch (error) {
+    console.error('Error fetching agents:', error);
+    toast.error('Failed to load agents');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
+  e.preventDefault();
+  setSaving(true);
 
-    try {
-      const url = editingAgent
-        ? `${BACKEND_URL}/api/agents/${editingAgent.id}`
-        : `${BACKEND_URL}/api/agents`;
-      const method = editingAgent ? 'PUT' : 'POST';
+  try {
+    const url = editingAgent
+      ? `/agents/${editingAgent.id}`
+      : `/agents`;
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        toast.success(editingAgent ? 'Agent updated successfully' : 'Agent created successfully');
-        setIsDialogOpen(false);
-        resetForm();
-        fetchAgents();
-      } else {
-        throw new Error('Failed to save agent');
-      }
-    } catch (error) {
-      console.error('Error saving agent:', error);
-      toast.error('Failed to save agent');
-    } finally {
-      setSaving(false);
+    if (editingAgent) {
+      await api.put(url, formData);
+    } else {
+      await api.post(url, formData);
     }
-  };
+
+    toast.success(
+      editingAgent ? 'Agent updated successfully' : 'Agent created successfully'
+    );
+
+    setIsDialogOpen(false);
+    resetForm();
+    fetchAgents();
+  } catch (error) {
+    console.error('Error saving agent:', error);
+    toast.error('Failed to save agent');
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/agents/${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        setAgents(agents.filter((a) => a.id !== id));
-        toast.success('Agent deleted successfully');
-      } else {
-        throw new Error('Failed to delete');
-      }
-    } catch (error) {
-      console.error('Error deleting agent:', error);
-      toast.error('Failed to delete agent');
-    }
-  };
+  try {
+    await api.delete(`/agents/${id}`);
+    setAgents(agents.filter((a) => a.id !== id));
+    toast.success('Agent deleted successfully');
+  } catch (error) {
+    console.error('Error deleting agent:', error);
+    toast.error('Failed to delete agent');
+  }
+};
 
   const toggleAgentStatus = async (agent) => {
-    const newStatus = agent.status === 'active' ? 'inactive' : 'active';
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/agents/${agent.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (response.ok) {
-        setAgents(agents.map((a) => a.id === agent.id ? { ...a, status: newStatus } : a));
-        toast.success(`Agent ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
-      }
-    } catch (error) {
-      console.error('Error updating agent status:', error);
-      toast.error('Failed to update status');
-    }
-  };
+  const newStatus = agent.status === 'active' ? 'inactive' : 'active';
+
+  try {
+    await api.put(`/agents/${agent.id}`, { status: newStatus });
+
+    setAgents(
+      agents.map((a) =>
+        a.id === agent.id ? { ...a, status: newStatus } : a
+      )
+    );
+
+    toast.success(
+      `Agent ${newStatus === 'active' ? 'activated' : 'deactivated'}`
+    );
+  } catch (error) {
+    console.error('Error updating agent status:', error);
+    toast.error('Failed to update status');
+  }
+};
 
   const openEditDialog = (agent) => {
     setEditingAgent(agent);

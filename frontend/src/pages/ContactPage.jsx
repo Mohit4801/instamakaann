@@ -27,7 +27,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_BASE =
+  process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
 
 const contactInfo = [
 	{
@@ -107,7 +108,7 @@ const ContactPage = () => {
 		setSubmitting(true);
 
 		try {
-			const response = await fetch(`${BACKEND_URL}/api/inquiries`, {
+			const response = await fetch(`${API_BASE}/inquiries/`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -116,7 +117,8 @@ const ContactPage = () => {
 					phone: formData.phone,
 					subject: formData.subject,
 					message: formData.message,
-					inquiry_type: 'general',
+					inquiry_type: formData.subject || 'GENERAL',
+                    source_page: window.location.pathname,
 				}),
 			});
 

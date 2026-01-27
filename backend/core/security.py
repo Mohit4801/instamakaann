@@ -11,10 +11,13 @@ from core.config import JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from core.database import get_db
 
 # =========================
-# PASSWORD UTILS (ADMIN / AGENT)
+# PASSWORD UTILS
 # =========================
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt_sha256"],
+    deprecated="auto"
+)
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
@@ -33,7 +36,7 @@ AUDIENCE = "instamakaan_users"
 security = HTTPBearer()
 
 # =========================
-# TOKEN CREATORS
+# TOKEN HELPERS
 # =========================
 
 def _base_payload(data: dict):
@@ -45,28 +48,21 @@ def _base_payload(data: dict):
         "jti": str(uuid4()),
     }
 
-
 def create_access_token(
     data: dict,
     expires_delta: Optional[timedelta] = None
 ):
     payload = _base_payload(data)
-    expire = datetime.now(timezone.utc) + (
+    payload["type"] = "access"
+    payload["exp"] = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload.update({
-        "type": "access",
-        "exp": expire,
-    })
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
 
 def create_refresh_token(data: dict):
     payload = _base_payload(data)
-    payload.update({
-        "type": "refresh",
-        "exp": datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-    })
+    payload["type"] = "refresh"
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 # =========================
@@ -86,7 +82,7 @@ def decode_token(token: str):
         return None
 
 # =========================
-# CURRENT USER (DB-BACKED)
+# CURRENT USER
 # =========================
 
 async def get_current_user(
@@ -94,6 +90,7 @@ async def get_current_user(
     db=Depends(get_db),
 ):
     payload = decode_token(credentials.credentials)
+
     if not payload or payload.get("type") != "access":
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -101,24 +98,30 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
-    db = get_db()
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
+    # ✅ CRITICAL FIX: NORMALIZE ROLE
+    if "role" in user and isinstance(user["role"], str):
+        user["role"] = user["role"].upper()
+
     return user
 
 # =========================
-# RBAC
+# ROLE-BASED ACCESS CONTROL
 # =========================
 
 def require_role(roles: List[str]):
+    normalized_roles = [r.upper() for r in roles]
+
     async def checker(user=Depends(get_current_user)):
-        if user.get("role") not in roles:
+        if user.get("role") not in normalized_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Forbidden"
             )
         return user
+
     return checker

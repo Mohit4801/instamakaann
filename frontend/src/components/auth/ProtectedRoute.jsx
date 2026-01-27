@@ -3,52 +3,47 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
-/**
- * ProtectedRoute - Wrapper component for routes that require authentication
- * 
- * @param {Object} props
- * @param {React.ReactNode} props.children - The component to render if authenticated
- * @param {string[]} props.allowedRoles - Array of roles allowed to access this route (optional)
- */
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user, loading } = useAuth();
   const location = useLocation();
 
-  // Show loading spinner while checking auth status
+  /* ================= LOADING ================= */
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
+  /* ================= NOT AUTHENTICATED ================= */
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  // Check role-based access
+  /* ================= ROLE NOT ALLOWED ================= */
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    // Redirect based on user role to their appropriate dashboard
-    if (user?.role === 'owner') {
+    // 🔥 FIX: normal USER must go to public site
+    if (user?.role === 'USER') {
+      return <Navigate to="/" replace />;
+    }
+
+    if (user?.role === 'OWNER') {
       return <Navigate to="/owner" replace />;
-    } else if (user?.role === 'agent') {
+    }
+
+    if (user?.role === 'AGENT') {
       return <Navigate to="/agent" replace />;
     }
-    // Default redirect for unauthorized roles
+
+    // ADMIN fallback
     return <Navigate to="/admin" replace />;
   }
 
   return children;
 };
 
-/**
- * RoleBasedRedirect - Redirects users to their appropriate dashboard based on role
- */
+/* ================= ROLE BASED REDIRECT ================= */
 export const RoleBasedRedirect = () => {
   const { user, loading } = useAuth();
 
@@ -60,14 +55,20 @@ export const RoleBasedRedirect = () => {
     );
   }
 
-  // Redirect based on role
-  if (user?.role === 'owner') {
+  // 🔥 FIX: USER goes to homepage
+  if (user?.role === 'USER') {
+    return <Navigate to="/" replace />;
+  }
+
+  if (user?.role === 'OWNER') {
     return <Navigate to="/owner" replace />;
-  } else if (user?.role === 'agent') {
+  }
+
+  if (user?.role === 'AGENT') {
     return <Navigate to="/agent" replace />;
   }
-  
-  // Default to admin for admin users
+
+  // ADMIN default
   return <Navigate to="/admin" replace />;
 };
 

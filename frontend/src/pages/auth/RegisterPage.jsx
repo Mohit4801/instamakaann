@@ -36,12 +36,6 @@ const RegisterPage = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 
-	useEffect(() => {
-		if (isAuthenticated && !authLoading) {
-			navigate('/admin', { replace: true });
-		}
-	}, [isAuthenticated, authLoading, navigate]);
-
 	const passwordRequirements = [
 		{ label: 'At least 6 characters', met: password.length >= 6 },
 		{ label: 'Contains a number', met: /\d/.test(password) },
@@ -66,12 +60,17 @@ const RegisterPage = () => {
 		}
 
 		setLoading(true);
-		const result = await register(name, email, password, 'admin');
+		const result = await register(name, email, password,);
 
 		if (result.success) {
-			toast.success('Account created successfully!');
-			navigate('/admin', { replace: true });
-		} else {
+  toast.success('Please verify your email to continue');
+
+  navigate('/auth/verify-email', {
+    state: { email },
+    replace: true,
+  });
+}
+else {
 			setError(result.error);
 		}
 

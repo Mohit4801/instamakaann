@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import InquiryDetailDrawer from '@/components/admin/InquiryDetailDrawer';
+import api from '@/lib/api';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -44,18 +45,16 @@ const AgentInquiriesPage = () => {
   }, [agentId]);
 
   const fetchAgentInquiries = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/agents/${agentId}/inquiries`);
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-      }
-    } catch (error) {
-      console.error('Error fetching agent inquiries:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const { data } = await api.get(`/agents/${agentId}/inquiries`);
+    setData(data);
+  } catch (error) {
+    console.error('Error fetching agent inquiries:', error);
+    toast.error('Failed to load agent inquiries');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getStatusInfo = (status) => {
     return statusWorkflow.find(s => s.value === status) || statusWorkflow[0];
@@ -79,9 +78,28 @@ const AgentInquiriesPage = () => {
         new_status: status,
       });
 
-      const response = await fetch(`${BACKEND_URL}/api/inquiries/${inquiryId}/log?${params}`, {
-        method: 'POST',
-      });
+      const updateInquiryStatus = async (inquiryId, status, message = '') => {
+  setSubmitting(true);
+  try {
+    const logMessage = message || `Status updated to ${status.replace('_', ' ')}`;
+
+    await api.post(`/inquiries/${inquiryId}/log`, null, {
+      params: {
+        agent_id: agentId,
+        message: logMessage,
+        new_status: status,
+      },
+    });
+
+    toast.success(`Status updated to ${status.replace('_', ' ')}`);
+    fetchAgentInquiries();
+  } catch (error) {
+    console.error('Error updating status:', error);
+    toast.error('Failed to update status');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
       if (response.ok) {
         toast.success(`Status updated to ${status.replace('_', ' ')}`);

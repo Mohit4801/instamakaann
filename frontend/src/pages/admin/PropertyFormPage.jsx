@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import api from '@/lib/api';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -112,38 +113,33 @@ const PropertyFormPage = () => {
   }, [id]);
 
   const fetchOwners = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/owners?status=active`);
-      if (response.ok) {
-        const data = await response.json();
-        setOwners(data);
-      }
-    } catch (error) {
-      console.error('Error fetching owners:', error);
-    }
-  };
+  try {
+    const { data } = await api.get('/owners', {
+      params: { status: 'active' },
+    });
+    setOwners(data);
+  } catch (error) {
+    console.error('Error fetching owners:', error);
+    toast.error('Failed to load owners');
+  }
+};
 
   const fetchProperty = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/properties/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFormData({
-          ...defaultFormData,
-          ...data,
-        });
-        setImages(data.images || []);
-      } else {
-        throw new Error('Property not found');
-      }
-    } catch (error) {
-      console.error('Error fetching property:', error);
-      toast.error('Failed to load property');
-      navigate('/admin/properties');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const { data } = await api.get(`/properties/${id}`);
+    setFormData({
+      ...defaultFormData,
+      ...data,
+    });
+    setImages(data.images || []);
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    toast.error('Failed to load property');
+    navigate('/admin/properties');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -160,10 +156,10 @@ const PropertyFormPage = () => {
         formDataUpload.append('files', file);
       });
 
-      const response = await fetch(`${BACKEND_URL}/api/upload/multiple`, {
-        method: 'POST',
-        body: formDataUpload,
-      });
+      const { data } = await api.post('/upload/multiple', formDataUpload, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+});
+setImages((prev) => [...prev, ...data.urls]);
 
       if (response.ok) {
         const data = await response.json();
@@ -237,13 +233,11 @@ const PropertyFormPage = () => {
         : `${BACKEND_URL}/api/properties`;
       const method = isEditing ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      if (isEditing) {
+  await api.put(`/properties/${id}`, payload);
+} else {
+  await api.post('/properties', payload);
+}
 
       if (response.ok) {
         toast.success(isEditing ? 'Property updated successfully' : 'Property created successfully');

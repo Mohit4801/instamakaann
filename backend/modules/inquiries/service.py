@@ -2,21 +2,21 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from core.database import get_db
 from modules.inquiries.schemas import InquiryCreate, InquiryUpdate
-
+import uuid 
 
 async def create_inquiry(data: InquiryCreate):
     db = get_db()
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
 
     inquiry = data.model_dump()
     inquiry.update({
-        "id": inquiry.get("id"),
+        "id": str(uuid.uuid4()),
         "stage": "NEW",
         "assigned_agent_id": None,
         "assigned_agent_name": None,
         "notes": [],
         "conversation_logs": [],
-        "created_at": now,
+        "created_at": now,  
         "updated_at": now,
     })
 

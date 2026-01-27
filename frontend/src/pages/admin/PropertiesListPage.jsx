@@ -43,6 +43,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import PropertyPreviewDrawer from '@/components/admin/PropertyPreviewDrawer';
+import api from '@/lib/api'; // ✅ IMPORTANT
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -58,10 +59,10 @@ const PropertiesListPage = () => {
     fetchProperties();
   }, []);
 
+  /* ================= FETCH PROPERTIES (FIXED) ================= */
   const fetchProperties = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/properties`);
-      const data = await response.json();
+      const { data } = await api.get('/properties');
       setProperties(data);
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -71,17 +72,12 @@ const PropertiesListPage = () => {
     }
   };
 
+  /* ================= DELETE PROPERTY (FIXED) ================= */
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/properties/${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        setProperties(properties.filter((p) => p.id !== id));
-        toast.success('Property deleted successfully');
-      } else {
-        throw new Error('Failed to delete');
-      }
+      await api.delete(`/properties/${id}`);
+      setProperties((prev) => prev.filter((p) => p.id !== id));
+      toast.success('Property deleted successfully');
     } catch (error) {
       console.error('Error deleting property:', error);
       toast.error('Failed to delete property');
@@ -204,13 +200,7 @@ const PropertiesListPage = () => {
               ) : filteredProperties.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
-                    <div className="text-muted-foreground">
-                      <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No properties found</p>
-                      <Button variant="link" asChild className="mt-2">
-                        <Link to="/admin/properties/new">Add your first property</Link>
-                      </Button>
-                    </div>
+                    No properties found
                   </TableCell>
                 </TableRow>
               ) : (
@@ -223,20 +213,20 @@ const PropertiesListPage = () => {
                           <div className="w-16 h-12 rounded-lg bg-muted overflow-hidden shrink-0">
                             {property.images?.[0] ? (
                               <img
-                                src={property.images[0].startsWith('http') ? property.images[0] : `${BACKEND_URL}${property.images[0]}`}
+                                src={property.images[0].startsWith('http')
+                                  ? property.images[0]
+                                  : `${BACKEND_URL}${property.images[0]}`}
                                 alt={property.title}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Building2 className="w-6 h-6 text-muted-foreground" />
-                              </div>
+                              <Building2 className="w-6 h-6 mx-auto text-muted-foreground" />
                             )}
                           </div>
                           <div>
                             <button
                               onClick={() => setPreviewPropertyId(property.id)}
-                              className="font-medium line-clamp-1 text-primary hover:underline text-left"
+                              className="font-medium text-primary hover:underline"
                             >
                               {property.title}
                             </button>
@@ -248,57 +238,47 @@ const PropertiesListPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <TypeIcon className="w-4 h-4 text-primary" />
-                          <span className="capitalize">{property.property_type?.replace('-', ' ')}</span>
-                        </div>
+                        <TypeIcon className="w-4 h-4 text-primary inline mr-1" />
+                        {property.property_type}
                       </TableCell>
+                      <TableCell>₹{property.price}</TableCell>
                       <TableCell>
-                        <p className="font-medium">₹{property.price}</p>
-                        <p className="text-xs text-muted-foreground">{property.price_label}</p>
-                      </TableCell>
-                      <TableCell>
-                        <span className={cn('text-xs px-2 py-1 rounded-full font-medium capitalize', getStatusColor(property.status))}>
+                        <span className={cn('px-2 py-1 text-xs rounded-full', getStatusColor(property.status))}>
                           {property.status}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link to={`/property/${property.id}`} target="_blank">
-                              <Eye className="w-4 h-4" />
-                            </Link>
-                          </Button>
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link to={`/admin/properties/${property.id}/edit`}>
-                              <Pencil className="w-4 h-4" />
-                            </Link>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Property</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete &quot;{property.title}&quot;? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(property.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link to={`/property/${property.id}`} target="_blank">
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link to={`/admin/properties/${property.id}/edit`}>
+                            <Pencil className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Property</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(property.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   );
@@ -309,7 +289,6 @@ const PropertiesListPage = () => {
         </div>
       </Card>
 
-      {/* Property Preview Drawer */}
       <PropertyPreviewDrawer
         propertyId={previewPropertyId}
         isOpen={!!previewPropertyId}
