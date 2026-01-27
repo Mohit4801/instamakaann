@@ -26,7 +26,7 @@ def close_db():
 
 
 # =========================
-# AUDIT LOGGING (STEP 4)
+# AUDIT LOGGING 
 # =========================
 
 async def log_audit(
@@ -54,5 +54,5 @@ async def log_audit(
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
     except Exception:
-        # Never allow audit logging to break the request
+
         pass
